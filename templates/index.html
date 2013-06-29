@@ -1,0 +1,68 @@
+<!doctype>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>测试网页</title>
+    <link href='../static/css/common.css' rel='stylesheet' type='text/css' />
+    <script src= '../static/js/jquery-1.10.1.js'></script>
+  </head>
+
+  <body>
+    <center>
+      <h1>Welcome {{entity.name}} to Tornado</h1>
+      <form action="/" method="post">
+        <div>
+          <input type="text" name="msg" id="msg" maxlength="40"/>
+          <input type="submit" value="提交"/>
+      </div>
+    </center>
+    <p></p>
+  </body>
+  <script>
+    $(function () {
+
+      $("form").submit(function (){
+        var msg = $("#msg").val();
+        $.post(
+          '/',
+          {msg:msg},
+          function (data) {
+            $("#msg").val('');
+        });
+        return false;
+      });
+
+      var updater = {
+        poll: function(){
+          $.ajax({url: "/longpolling",
+            type: "POST",
+            dataType: "json",
+            success: updater.onSuccess,
+            error: updater.onError});
+        },
+        onSuccess: function(data, dataStatus){
+          for (var p in data)
+            console.log(p + ":" + data[p])
+          try{
+            if (data.msg != "") {
+              $("p").append(data.name+": " + data.msg + "<br />");
+            }
+          }
+          catch(e){
+            updater.onError(e);
+            return;
+          }
+          updater.poll();
+        },
+        onError: function(e){
+          if (e.message)
+            console.log("Poll Error" + e.message);
+          else
+            console.log(e);
+        }
+      };
+  
+      updater.poll();
+    });
+  </script>
+</html>
