@@ -1,1 +1,1 @@
-使用Tornado/Redi和Ajax LongPolling实现简易聊天功能
+使用Tornado/Redis和Ajax LongPolling实现简易聊天功能
