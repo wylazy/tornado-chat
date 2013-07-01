@@ -23,25 +23,27 @@ class LongPollingHandler(tornado.web.RequestHandler):
   @tornado.gen.engine
   def subscribe(self):
     yield tornado.gen.Task(self.client.subscribe, 'test_channel')
-    try :
-      self.client.listen(self.on_message)
-    except ConnectionError :
-      pass;
+    self.client.listen(self.on_message)
   
   def get_data(self):
     if self.request.connection.stream.closed():
       return
        
-    self.subscribe()
+    try :
+      self.subscribe()
+    except Exception, e :
+      print e
+      pass;
 
     num = 10
-    tornado.ioloop.IOLoop.instance().add_timeout(
+    self.time_handler = tornado.ioloop.IOLoop.instance().add_timeout(
       time.time()+num,
       lambda: self.on_timeout(num)
     )
 
 
   def on_timeout(self, num):
+    self.time_handler = None
     self.send_data(json_encode({'name':'', 'msg':''}))
     if (self.client.connection.connected()):
       self.client.disconnect()
@@ -61,7 +63,16 @@ class LongPollingHandler(tornado.web.RequestHandler):
     elif (msg.kind == 'unsubscribe'):
       self.client.disconnect()
 
+  def remove_time_handler(self):
+    if self.time_handler :
+      tornado.ioloop.IOLoop.instance().remove_timeout(self.time_handler)
+      self.time_handler = None
+
   def on_finish(self):
+
+    self.remove_time_handler()
     if (self.client.subscribed):
       self.client.unsubscribe('test_channel');
 
+  def on_connection_close(self):
+    self.finish()
