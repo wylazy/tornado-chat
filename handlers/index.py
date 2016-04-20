@@ -1,4 +1,5 @@
 #coding:utf-8
+#-*- coding:utf-8 -*-
 
 import json
 import tornado.web 
@@ -8,7 +9,7 @@ from tornado.escape import json_encode
 from model.entity import Entity
 
 
-c = tornadoredis.Client()
+c = tornadoredis.Client(host='127.0.0.1', port=6379)
 c.connect()
 
 class MainHandler(tornado.web.RequestHandler) :
